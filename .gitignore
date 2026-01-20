@@ -1,0 +1,71 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+env/
+ENV/
+venv/
+pip-wheel-metadata/
+
+# VS Code settings
+.vscode/
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# macOS metadata
+.DS_Store
+
+# Windows metadata
+Thumbs.db
+
+# Logs
+*.log
+
+# Environment variables / secrets
+.env
+.env.*
+
+# Compiled C extensions / build artifacts
+*.so
+*.pyd
+build/
+dist/
+*.egg-info/
+
+# Data outputs
+*.h5
+*.npz
+*.npy
+
+# Matplotlib & other caches
+.matplotlib_cache/
+.mplconfig/
+
+# pytest
+.cache/
+.pytest_cache/
+
+# MyPy and other tools
+.mypy_cache/
+.dmypy.json
+.pyre/
+
+# IDEs
+.idea/
+
+# Data files
+*.mat
+
+# Generated images
+*.png
+*.jpg
+
+# Results / figures
+beam_images/
+figures_for_thesis/*.png
+
+
