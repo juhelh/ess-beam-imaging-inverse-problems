@@ -3,10 +3,9 @@
 This repository contains code developed in connection with the master’s
 thesis *Inverse Problems in Proton Beam Imaging at ESS: Analysis and Numerical Methods* by Joel Henriksson, Lund University (LTH).
 
-The code contains a simulator of the forward model that produces the proton beam images,
-as well as two methods for parameter estimation: optimization and Markov Chain
-Monte Carlo (with parallel tempering). All code is JAX-based and meant to be run on a
-GPU to be fast and efficient.
+The code includes a simulator of the forward model that produces the proton beam images,
+as well as two methods for parameter estimation: optimization and Markov chain
+Monte Carlo (with parallel tempering). All code is based on the JAX library, developed by Google for high-performance computing.
 
 ## Reproducibility
 
@@ -15,17 +14,14 @@ tag `v1.0-thesis`.
 
 ## Code structure
 The code is organized into modules for configuration, simulation, noise modeling,
-optimization, and statistical methods. Scripts used to generate numerical results
-and figures appearing in the thesis are included.
+optimization, and statistical methods.
 
 
 ## Requirements
-Python dependencies are listed in `requirements.txt`. The code is intended to be
-run in a scientific Python environment with JAX support.
-
+Python dependencies are listed in `requirements.txt`. The code is intended to be run on a GPU due to heavy parallelization.
 
 ## Scope
-The repository is primarily meant to serve as an archive of the code used in the thesis. 
-However it may develop further over time.
+The repository primarily serves as an archive of the code used in the thesis.
+
 
 
