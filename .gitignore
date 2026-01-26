@@ -67,4 +67,8 @@ dist/
 # Results / figures
 figures_for_thesis/*.png
 
+# --- Allow EPICS debug data on integration branch ---
+!beam_images/
+!beam_images/**
+
 
