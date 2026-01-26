@@ -65,7 +65,6 @@ dist/
 *.jpg
 
 # Results / figures
-beam_images/
 figures_for_thesis/*.png
 
 
