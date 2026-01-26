@@ -1,6 +1,6 @@
 # Inverse Problems in Proton Beam Imaging at ESS (code)
 
-This repository contains code developed in connection with the master’s
+This repository contains code developed in the master’s
 thesis *Inverse Problems in Proton Beam Imaging at ESS: Analysis and Numerical Methods* by Joel Henriksson, Lund University (LTH).
 
 The code includes a simulator of the forward model that produces the proton beam images,
@@ -22,6 +22,7 @@ Python dependencies are listed in `requirements.txt`. The code is intended to be
 
 ## Scope
 The repository primarily serves as an archive of the code used in the thesis.
+
 
 
 
