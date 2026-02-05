@@ -221,9 +221,9 @@ def run_l2_on_long_pulse():
     X, Y, t_vals, _, _ = make_configuration(
         pulse_duration_ms=pulse_duration_ms,
         sampling_rate=sampling_rate,
-        field_x_mm=float(W),
-        field_y_mm=float(H),
-        pixel_size_mm=1.0,
+        field_x=float(W),
+        field_y=float(H),
+        pixel_size=1.0,
     )
 
     # Convert JAX → NumPy (IMPORTANT for SciPy BFGS)
@@ -333,9 +333,9 @@ def run_l2_short_pulse():
     X, Y, t_vals, _, _ = make_configuration(
         pulse_duration_ms=pulse_duration_ms,
         sampling_rate=sampling_rate,
-        field_x_mm=float(W),
-        field_y_mm=float(H),
-        pixel_size_mm=1.0,
+        field_x=float(W),
+        field_y=float(H),
+        pixel_size=1.0,
     )
 
     # Convert JAX → NumPy (IMPORTANT for SciPy BFGS)
@@ -626,9 +626,9 @@ def run_custom_image():
     X, Y, t_vals, _, _ = make_configuration(
         pulse_duration_ms=float(pulse_duration_ms),
         sampling_rate=int(sampling_rate),
-        field_x_mm=float(W),
-        field_y_mm=float(H),
-        pixel_size_mm=1.0,
+        field_x=float(W),
+        field_y=float(H),
+        pixel_size=1.0,
     )
 
     # Keep as JAX float32 for speed
@@ -734,9 +734,141 @@ def run_custom_image():
         k_est=k_est,
     )
 
+
+def run_custom_image_bfgs():
+    print("\n=== Running BFGS (SciPy L-BFGS-B) on custom EPICS image ===")
+
+    # --------------------------------------------------
+    # 1) Load + preprocess
+    # --------------------------------------------------
+    I_raw, meta = load_custom_snapshot()
+
+    I_clean = remove_background(I_raw)
+
+    bbox = tight_crop_bbox(
+        I_clean,
+        frac=0.02,
+        pad=10,
+        min_h=32,
+        min_w=32,
+    )
+
+    show_bbox(I_clean, bbox, title="Tight signal ROI")
+    I_obs = crop_image(I_clean, bbox)
+    show_image(I_obs, "Observed EPICS image (cropped)")
+
+    # Normalize observed (shape-only)
+    I_obs = I_obs / (np.linalg.norm(I_obs) + 1e-12)
+
+    # --------------------------------------------------
+    # 2) Build simulation grid (NumPy arrays for SciPy)
+    # --------------------------------------------------
+    H, W = I_obs.shape
+
+    # Exposure time -> pulse duration (ms)
+    pulse_duration_ms = meta["exposure_time"] / 1_000_000.0
+
+    sampling_rate = 2_000_000
+
+    X, Y, t_vals, _, _ = make_configuration(
+        pulse_duration_ms=float(pulse_duration_ms),
+        sampling_rate=int(sampling_rate),
+        field_x=float(W),
+        field_y=float(H),
+        pixel_size=1.0,
+    )
+
+    # IMPORTANT: SciPy wants NumPy arrays
+    X = np.array(X)
+    Y = np.array(Y)
+    t_vals = np.array(t_vals)
+
+    # --------------------------------------------------
+    # 3) Initial guess + bounds
+    # --------------------------------------------------
+    fx0 = float(meta["fx"])   # kHz
+    fy0 = float(meta["fy"])   # kHz
+
+    Ax0 = 40.0
+    Ay0 = 30.0
+
+    k0 = np.array([
+        Ax0,     # Ax
+        Ay0,     # Ay
+        5.0,     # sigx
+        5.0,     # sigy
+        -5.0,    # cx
+        -5.0,    # cy
+        fx0,     # fx
+        fy0,     # fy
+        1.0,     # phix
+        2.0,     # phiy
+    ], dtype=np.float64)
+
+    lower = np.array([
+        10, 10,
+        2, 2,
+        -50, -50,
+        0.95 * fx0, 0.95 * fy0,
+        0.0, 0.0
+    ], dtype=np.float64)
+
+    upper = np.array([
+        120, 80,
+        20, 20,
+        50, 50,
+        1.05 * fx0, 1.05 * fy0,
+        2*np.pi, 2*np.pi
+    ], dtype=np.float64)
+
+    bounds = list(zip(lower, upper))
+
+    # --------------------------------------------------
+    # 4) Loss with regularization (Ax, Ay)
+    # --------------------------------------------------
+    # NOTE: loss_regularized imported from solve_minimization_10D_real
+    # (same signature style as your other functions)
+    reg_loss = lambda k, I_obs, X, Y, t_vals: loss_regularized(
+        k, I_obs, X, Y, t_vals,
+        Ax_ref=Ax0,
+        Ay_ref=Ay0,
+        lambda_Ax=5e-3,
+        lambda_Ay=5e-3
+    )
+
+    # --------------------------------------------------
+    # 5) Run BFGS (SciPy L-BFGS-B)
+    # --------------------------------------------------
+    result = estimate_parameters_BFGS(
+        I_obs=I_obs,
+        X=X,
+        Y=Y,
+        t_vals=t_vals,
+        k0=k0,
+        bounds=bounds,
+        loss_function=reg_loss,
+        maxiter=100,
+        verbose=True,
+    )
+
+    k_est = result.x
+    print_k_estimate(k_est)
+
+    # --------------------------------------------------
+    # 6) Visualization
+    # --------------------------------------------------
+    visualize_estimation_result(
+        I_obs=I_obs,
+        X=X,
+        Y=Y,
+        t_vals=t_vals,
+        k_est=k_est,
+    )
+
 # --------------------------------------------------
 
 if __name__ == "__main__":
+    run_custom_image_bfgs()
     run_custom_image()
     run_l2_short_pulse()
     run_l2_on_long_pulse()

@@ -13,9 +13,6 @@ def triangle_wave(f, t, phi=0.0):
     phase = (f * t - 0.25 + phi / (2 * jnp.pi)) % 1.0
     return 4.0 * jnp.abs(phase - 0.5) - 1.0
 
-# def triangle_wave(f, t, phi=0.0):
-#         return (2.0 / jnp.pi) * jnp.arcsin(jnp.sin(2.0 * jnp.pi * f * t + phi))
-
 
 def triangle_wave_2(f, t, phi=0.0, eps=1e-12):
     phase = (f * t - 0.25 + phi / (2 * jnp.pi)) % 1.0
@@ -58,12 +55,22 @@ def simulate_image(x, y, t_vals, k):
     return I_norm
 
 
+# @jit
+# def loss_function(k, I_obs, X, Y, t_vals):
+#     I_sim = simulate_image(X, Y, t_vals, k)
+#     num = jnp.sum((I_sim - I_obs) ** 2)
+#     denom = jnp.sum(I_obs ** 2)
+#     return num / denom
+
 @jit
 def loss_function(k, I_obs, X, Y, t_vals):
     I_sim = simulate_image(X, Y, t_vals, k)
-    num = jnp.sum((I_sim - I_obs) ** 2)
-    denom = jnp.sum(I_obs ** 2)
-    return num / denom
+
+    # L2-normalize both to compare shape only
+    I_sim = I_sim / jnp.linalg.norm(I_sim)
+    I_obs_n = I_obs / jnp.linalg.norm(I_obs)
+
+    return jnp.sum((I_sim - I_obs_n) ** 2)
 
 
 def loss_gradient(k, I_obs, X, Y, t_vals):
@@ -165,6 +172,7 @@ def visualize_estimation_result(I_obs, X, Y, t_vals, k_est):
     and show their pixelwise difference.
     """
     I_est = simulate_image(X, Y, t_vals, k_est)
+    I_est = I_est/jnp.linalg.norm(I_est)
     I_diff = I_est - I_obs
 
     # Compute some difference stats
@@ -196,19 +204,6 @@ def visualize_estimation_result(I_obs, X, Y, t_vals, k_est):
     plt.tight_layout()
     plt.show(block=True)
 
-# ---------------------------------------------------------
-# Gaussian-with-rejection sampler
-# ---------------------------------------------------------
-def sample_gaussian_with_rejection(rng, mean, std, lower, upper, max_trials=5000):
-    """
-    Draw a single 10D parameter vector from N(mean, std^2)
-    with rejection if outside bounds.
-    """
-    for _ in range(max_trials):
-        x = rng.normal(mean, std)
-        if np.all(x >= lower) and np.all(x <= upper):
-            return x
-    raise RuntimeError("Rejection sampling failed: no valid sample.")
 
 
 # ---------------------------------------------------------

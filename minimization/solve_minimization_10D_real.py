@@ -125,7 +125,7 @@ def loss_function(k, I_obs, X, Y, t_vals):
 def loss_regularized(k, I_obs, X, Y, t_vals,
                      Ax_ref=70.0, Ay_ref=30.0,
                      lambda_Ax=1e-2, lambda_Ay=1e-2):
-    # data term (your current shape-only L2)
+    # data term (current shape-only L2)
     L_data = loss_function(k, I_obs, X, Y, t_vals)
 
     # amplitude prior term

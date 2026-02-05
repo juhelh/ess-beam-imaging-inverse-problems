@@ -3,21 +3,27 @@ import jax.numpy as jnp
 from functools import partial
 from jax import lax
 
-# For real images
+
 def make_configuration(
-    pulse_duration_ms = 0.05,
-    sampling_rate = 1_000_000,
-    field_x_mm = 400.0,
-    field_y_mm = 350.0,
-    pixel_size_mm = 1.0
+    pulse_duration_ms=0.05,
+    sampling_rate=1_000_000,
+    field_x=400.0,
+    field_y=350.0,
+    pixel_size=1.0,
 ):
+    """
+    Build spatial and temporal grids.
+
+    Spatial units are arbitrary (typically pixels).
+    Physical calibration can be applied outside this function if needed.
+    """
 
     # --- Spatial grid ---
-    NX = int(field_x_mm / pixel_size_mm)
-    NY = int(field_y_mm / pixel_size_mm)
+    NX = int(field_x / pixel_size)
+    NY = int(field_y / pixel_size)
 
-    x = jnp.linspace(-field_x_mm/2, field_x_mm/2, NX)
-    y = jnp.linspace(-field_y_mm/2, field_y_mm/2, NY)
+    x = jnp.linspace(-field_x / 2, field_x / 2, NX)
+    y = jnp.linspace(-field_y / 2, field_y / 2, NY)
     X, Y = jnp.meshgrid(x, y, indexing="xy")
 
     # --- Time grid ---
@@ -35,7 +41,7 @@ def make_configuration(
         0.0,
         0.0,
         39.55,
-        29.05
+        29.05,
     ])
 
     return X, Y, T_VALS, DT, k_true
